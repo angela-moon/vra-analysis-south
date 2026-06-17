@@ -1,6 +1,6 @@
 # The Impact of the VRA on Minority Representation: What “Race-Blind” Redistricting Looks Like in Southern States
 
-In late April 2026, the Supreme Court decided a Louisiana congressional map was unconstitutional due to race being a predominant factor in creating the districts. This case, *Louisiana v. Callais*, significantly reduces protections for minority representation through the Voting Rights Act. Following this case, there have been questions, concerns, and speculation surrounding how this case will impact minority representation throughout the case.
+In late April 2026, the Supreme Court decided a Louisiana congressional map was unconstitutional due to race being a predominant factor in creating the districts. This case, *Louisiana v. Callais*, significantly reduces protections for minority representation through the Voting Rights Act (VRA). Following this case, there have been questions, concerns, and speculation surrounding how this case will impact minority representation throughout the case.
 
 Through this project, we hoped to further investigate what redistricting would look like without VRA protections in southern US States. 
 
