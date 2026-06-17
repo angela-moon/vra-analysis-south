@@ -31,8 +31,10 @@ NC/NC_First_Ensemble_gif/
 NC/NC_First_Ensemble_stats/
 NC/NC_Markov_gif_1/
 NC/NC_Markov_gif_2/
+NC/NC_Markov_gif_3/
 NC/NC_Markov_stats_1/
 NC/NC_Markov_stats_5000/
+NC/NC_Markov_stats_100000/
 NC/NC_Processed/nc_2024_gen_2020_blocks/
 NC/NC_Processed/NC_ALARM
 NC/NC_Processed/nc_cong_adopted_2025/
@@ -44,7 +46,9 @@ NC/NC_Processed/nc_vest_16/
 NC/NC_Processed/nc_vest_18/
 NC/NC_Processed/nc_vest_20/
 NC/NC_Processed/output/
-NC/NC_Stats
+NC/NC_Seed_Plans/
+NC/NC_Stats/
+NC/NC_assignment_{seed}_{temp}.json
 
 SC/SC_Processed/output/
 SC/SC_Processed/sc_2024_gen_2020_blocks/
