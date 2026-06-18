@@ -1,3 +1,5 @@
+.vscode/
+
 FL/FL_Processed/fl/
 FL/FL_Processed/fl_2024_gen_2020_blocks/
 FL/FL_Processed/FL_ALARM/
@@ -25,6 +27,11 @@ GA/GA_Processed/ga_vest_16/
 GA/GA_Processed/ga_vest_18/
 GA/GA_Processed/output
 GA/GA_Stats/
+
+MEW_walkthrough/.vscode/
+MEW_walkthrough/NC/
+MEW_Walkthrough/NC_MEW_gif/
+MEW_Walkthrough/SC/
 
 NC/__pycache__/
 NC/NC_First_Ensemble_gif/
