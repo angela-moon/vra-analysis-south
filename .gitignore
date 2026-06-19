@@ -33,6 +33,7 @@ MEW_walkthrough/NC/
 MEW_Walkthrough/NC_MEW_gif/
 MEW_Walkthrough/SC/
 MEW_Walkthrough/NC_MEW.json
+MEW_walkthrough/link_cut_MEW
 
 
 NC/__pycache__/
@@ -60,6 +61,8 @@ NC/NC_Stats/
 NC/NC_assignment_{seed}_{temp}.json
 NC/NC_assignment_current.json
 
+SC/SC_Ensemble_Graphs/
+SC/SC_Ensemble_Stats/
 SC/SC_Processed/output/
 SC/SC_Processed/sc_2024_gen_2020_blocks/
 SC/SC_Processed/SC_ALARM/
@@ -73,6 +76,7 @@ SC/SC_Processed/sc_vest_18/
 SC/SC_Processed/sc_vest_20/
 SC/SC_Seed_Plans/
 SC/SC_Stats/
+SC/SC_assignment_current.json
 
 NY_Processed_Precincts_Data/
 
@@ -81,4 +85,3 @@ First_Ensemble.ipynb
 MCMC_Matching_Exploration.ipynb
 Process_NY.ipynb
 
-SC/SC_Seed_Plans/sc_seed_plan2.json
