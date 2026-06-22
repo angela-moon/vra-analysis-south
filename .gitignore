@@ -34,13 +34,7 @@ GA/GA_Seed_Plans/
 GA/GA_Stats/
 GA/GA_assignment_current.json
 
-MEW_walkthrough/.vscode/
-MEW_walkthrough/NC/
-MEW_Walkthrough/NC_MEW_gif/
-MEW_Walkthrough/SC/
-MEW_Walkthrough/NC_MEW.json
-MEW_walkthrough/link_cut_MEW
-
+MEW_walkthrough/
 
 NC/__pycache__/
 NC/NC_First_Ensemble_gif/
@@ -92,3 +86,4 @@ First_Ensemble.ipynb
 MCMC_Matching_Exploration.ipynb
 Process_NY.ipynb
 
+MEW_walkthrough/link_cut_MEW
