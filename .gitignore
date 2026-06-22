@@ -1,5 +1,7 @@
 .vscode/
 
+fifty-states-main/
+
 FL/FL_Processed/fl/
 FL/FL_Processed/fl_2024_gen_2020_blocks/
 FL/FL_Processed/FL_ALARM/
@@ -64,6 +66,7 @@ NC/NC_Seed_Plans/
 NC/NC_Stats/
 NC/NC_assignment_{seed}_{temp}.json
 NC/NC_assignment_current.json
+NC/Redist Analysis
 
 SC/SC_Ensemble_Graphs/
 SC/SC_Ensemble_Stats/

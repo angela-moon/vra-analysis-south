@@ -1,44 +1,30 @@
----
-title: "ALARM_data"
-format: html
----
 
-```{r load}
 library(alarmdata)
 library(sf)
 library(tidyverse)
-```
 
-```{r nc}
 map_nc = alarm_50state_map("NC")
 map_nc <- map_nc %>%
   select(!adj)
 
-st_write(map_nc, "./nc_alarm.shp")
+st_write(map_nc, ".NC/NC_Processed/NC_ALARM/nc_alarm.shp")
 
-```
-
-```{r sc}
 map_sc = alarm_50state_map("SC")
 map_sc <- map_sc %>%
   select(!adj)
 
-st_write(map_sc, "./SC_Processed/SC_ALARM/sc_alarm.shp")
-```
+st_write(map_sc, "./SC/SC_Processed/SC_ALARM/sc_alarm.shp")
 
-```{r ga}
 map_ga = alarm_50state_map("GA")
 map_ga <- map_ga %>%
   select(!adj)
 
-st_write(map_ga, "./GA_Processed_ALARM/ga_alarm.shp")
-```
+st_write(map_ga, "./GA/GA_Processed_ALARM/ga_alarm.shp")
 
-```{r fl}
 map_fl = alarm_50state_map("FL")
 map_fl <- map_fl %>%
   select(!adj)
 
-st_write(map_fl, "./FL_Processed_ALARM/fl_alarm.shp")
-```
+st_write(map_fl, "./FL/FL_Processed_ALARM/fl_alarm.shp")
+
 
