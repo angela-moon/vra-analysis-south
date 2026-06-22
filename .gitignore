@@ -15,6 +15,8 @@ FL/FL_Processed/fl_vest_20/
 FL/FL_Processed/output/
 FL/FL_Stats/
 
+GA/GA_Ensemble_Graphs/
+GA/GA_Ensemble_Stats/
 GA/GA_Processed/ga_2020_gen_2020_blocks/
 GA/GA_Processed/ga_2022_gen_prec
 GA/GA_Processed/GA_ALARM/
@@ -25,8 +27,10 @@ GA/GA_Processed/ga_sldl_adopted_2023/
 GA/GA_Processed/ga_sldu_adopted_2023/
 GA/GA_Processed/ga_vest_16/
 GA/GA_Processed/ga_vest_18/
-GA/GA_Processed/output
+GA/GA_Processed/output/
+GA/GA_Seed_Plans/
 GA/GA_Stats/
+GA/GA_assignment_current.json
 
 MEW_walkthrough/.vscode/
 MEW_walkthrough/NC/
