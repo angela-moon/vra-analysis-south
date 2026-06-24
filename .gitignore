@@ -33,6 +33,9 @@ GA/GA_Processed/output/
 GA/GA_Seed_Plans/
 GA/GA_Stats/
 GA/GA_assignment_current.json
+GA/Redist Analysis/GA_ALARM_Ensemble_stats
+GA/Redist Analysis/output
+GA/Redist Analysis/ga_alarm_plans.csv
 
 MEW_walkthrough/
 
@@ -62,8 +65,10 @@ NC/NC_assignment_{seed}_{temp}.json
 NC/NC_assignment_current.json
 NC/Redist Analysis/NC_ALARM_Ensemble_graph
 NC/Redist Analysis/NC_ALARM_Ensemble_stats
+NC/Redist Analysis/output
 NC/Redist Analysis/nc_alarm_plans.csv
 
+SC/Redist Analysis/output
 SC/Redist Analysis/SC_ALARM_Ensemble_graph
 SC/Redist Analysis/SC_ALARM_Ensemble_stats
 SC/Redist Analysis/sc_alarm_plans.csv
