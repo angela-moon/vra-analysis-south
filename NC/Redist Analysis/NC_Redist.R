@@ -8,7 +8,7 @@ state= "NC"
 nsims_per_run= 2500
 runs= 2
 ncores=1
-seed= 1861
+seed= 2
 pop_tol = 0.01
 compactness= 1
 pop_temper= 0.05
@@ -44,4 +44,5 @@ plan_mat <- redist::get_plans_matrix(plans_sampled)
 
 rownames(plan_mat) <- map$GEOID
 
-fwrite(as.data.frame(plan_mat), "nc_alarm_plans.csv", row.names = TRUE)
+fwrite(as.data.frame(plan_mat), "nc_alarm_plans2.csv", row.names = TRUE)
+
