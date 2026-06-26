@@ -2,6 +2,7 @@
 
 fifty-states-main/
 
+FL/FL_Ensemble_Stats/
 FL/FL_Processed/fl/
 FL/FL_Processed/fl_2024_gen_2020_blocks/
 FL/FL_Processed/FL_ALARM/
@@ -15,7 +16,12 @@ FL/FL_Processed/fl_vest_16/
 FL/FL_Processed/fl_vest_18/
 FL/FL_Processed/fl_vest_20/
 FL/FL_Processed/output/
+FL/FL_Processed2
+FL/FL_Seed_Plans/
 FL/FL_Stats/
+FL/Redist Analysis/FL_ALARM_Ensemble_stats/
+FL/Redist Analysis/fl_alarm_plans.csv
+FL/FL_assignment_current.json
 
 GA/GA_Ensemble_Graphs/
 GA/GA_Ensemble_Stats/
