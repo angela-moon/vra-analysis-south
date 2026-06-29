@@ -1,3 +1,4 @@
+__MACOSX
 .vscode/
 
 fifty-states-main/
@@ -46,6 +47,7 @@ GA/Redist Analysis/ga_alarm_plans.csv
 MEW_walkthrough/
 
 NC/__pycache__/
+NC/MEW/
 NC/NC_First_Ensemble_gif/
 NC/NC_First_Ensemble_stats/
 NC/NC_Markov_gif_1/
