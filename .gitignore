@@ -43,8 +43,21 @@ GA/GA_assignment_current.json
 GA/Redist Analysis/GA_ALARM_Ensemble_stats
 GA/Redist Analysis/output
 GA/Redist Analysis/ga_alarm_plans.csv
+GA/Redist Analysis/.RDataTmp
 
-MEW_walkthrough/
+MEW_walkthrough/__MACOSX/
+MEW_walkthrough/.vscode/
+MEW_walkthrough/cs_runs_NC
+MEW_walkthrough/NC
+MEW_walkthrough/NC_MEW_gif
+MEW_walkthrough/SC
+MEW_walkthrough/.gitignore
+MEW_walkthrough/NC_MEW.json
+MEW_walkthrough/link_cut_MEW/.gitignore
+MEW_walkthrough/link_cut_MEW/README.md
+MEW_walkthrough/Manifest.toml
+MEW_walkthrough/Project.toml
+
 
 NC/__pycache__/
 NC/MEW/
@@ -104,5 +117,3 @@ Angela_Matching_Exploration.ipynb
 First_Ensemble.ipynb
 MCMC_Matching_Exploration.ipynb
 Process_NY.ipynb
-
-MEW_walkthrough/link_cut_MEW
