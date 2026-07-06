@@ -418,6 +418,17 @@ function make_combined_energy(
     end
 end
 
+function make_min_county_splits_energy(
+    county_ids      :: Vector{Any}
+)
+    return function(g, new_ntd, old_ntd) 
+        # g=  graph, ntd = node to district, K= # districts
+        cty_splits_new = county_splits(g, new_ntd, county_ids)
+
+        return -cty_splits_new
+    end
+end
+
 # ── initialisation ────────────────────────────────────────────────────────
 
 """

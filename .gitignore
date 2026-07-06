@@ -48,8 +48,10 @@ GA/Redist Analysis/.RDataTmp
 MEW_walkthrough/__MACOSX/
 MEW_walkthrough/.vscode/
 MEW_walkthrough/cs_runs_NC
+MEW_walkthrough/cs_runs_NC_jld2
 MEW_walkthrough/NC
 MEW_walkthrough/NC_MEW_gif
+MEW_walkthrough/NC_Seed_Plans
 MEW_walkthrough/SC
 MEW_walkthrough/.gitignore
 MEW_walkthrough/NC_MEW.json
