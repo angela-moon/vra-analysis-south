@@ -33,7 +33,7 @@ function long_run(n, j)
 
     if start_i <= n
         for i in start_i:n
-            c2             = main(; initialization)
+            c2             = main(; initialization,N_ITERS=10_000)
             serialize("$(run_dir)/run$(i).jls", c2)
             initialization = (c2[3], c2[4])
             GC.gc() # garbage collector
@@ -57,7 +57,7 @@ end
     return nothing
 end =#
 
-num_iterations = 15
+num_iterations = 400
 
 # j_values          = 1:10
 # param_combinations = vec([(j=j,) for j in j_values])
@@ -65,4 +65,4 @@ num_iterations = 15
 
 #results = pmap(run_wrapper, param_combinations)
 
-long_run(num_iterations, "_min_cs")
+long_run(num_iterations, "3")

@@ -8,6 +8,7 @@ FL/FL_Processed/fl/
 FL/FL_Processed/fl_2024_gen_2020_blocks/
 FL/FL_Processed/FL_ALARM/
 FL/FL_Processed/fl_cong_adopted_2022/
+FL/FL_Processed/fl_cong_adopted_2026/
 FL/FL_Processed/FL_eveomett/
 FL/FL_Processed/fl_pl2020_b/
 FL/FL_Processed/fl_pl2020_cnty/
@@ -49,6 +50,7 @@ MEW_walkthrough/__MACOSX/
 MEW_walkthrough/.vscode/
 MEW_walkthrough/cs_runs_NC
 MEW_walkthrough/cs_runs_NC_jld2
+MEW_walkthrough/cs_runs_NC_plots
 MEW_walkthrough/NC
 MEW_walkthrough/NC_MEW_gif
 MEW_walkthrough/NC_Seed_Plans
@@ -73,6 +75,7 @@ NC/NC_Markov_stats_5000/
 NC/NC_Markov_stats_100000/
 NC/NC_Processed/nc_2024_gen_2020_blocks/
 NC/NC_Processed/NC_ALARM
+NC/NC_Processed/nc_cong_adopted_2022/
 NC/NC_Processed/nc_cong_adopted_2025/
 NC/NC_Processed/nc_pl2020_b/
 NC/NC_Processed/nc_pl2020_cnty/

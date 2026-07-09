@@ -419,13 +419,19 @@ function make_combined_energy(
 end
 
 function make_min_county_splits_energy(
-    county_ids      :: Vector{Any}
+    beta_county_splits :: Number,
+    beta_cuts   :: Number,
+    county_ids  :: Vector{Any}
 )
     return function(g, new_ntd, old_ntd) 
         # g=  graph, ntd = node to district, K= # districts
         cty_splits_new = county_splits(g, new_ntd, county_ids)
+        cty_splits_old = county_splits(g, old_ntd, county_ids)
+        
+        cuts_new = count(e -> new_ntd[src(e)] != new_ntd[dst(e)],edges(g))
+        cuts_old = count(e -> old_ntd[src(e)] != old_ntd[dst(e)],edges(g))
 
-        return -cty_splits_new
+        return -beta_county_splits * (cty_splits_new - cty_splits_old) - beta_cuts * (cuts_new - cuts_old)
     end
 end
 

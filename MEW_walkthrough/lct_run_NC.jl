@@ -46,9 +46,9 @@ end
 
 const K          = 14
 const EPSILON    = 0.02
-const N_ITERS    = 10_000
+#const N_ITERS    = 10_000
 
-function main(; initialization=nothing)
+function main(; initialization=nothing,N_ITERS)
 
     data  = JSON.parsefile("NC/NC_dual_graph_stripped.json")
     nodes = data["nodes"]
@@ -112,8 +112,8 @@ function main(; initialization=nothing)
     # energy_fn = make_polsby_popper_energy(1000.0, areas, boundary_lengths, perim_dict, K)
     # energy_fn = make_cuts_energy(0.1, 600)
     # energy_fn = make_county_splits_energy(0.4, df[!,"COUNTYFP"])
-    # energy_fn = make_combined_energy(0.75,county_ids,0.01, 10,650)
-    energy_fn = make_min_county_splits_energy(county_ids)
+    energy_fn = make_combined_energy(1.2,county_ids,0.01, 8,650)
+    # energy_fn = make_min_county_splits_energy(7, 1, county_ids)
 
     initial_partition = ntd_to_partition_dict(state.node_to_dist)
     current_ntd       = copy(state.node_to_dist)
@@ -182,12 +182,12 @@ function prepare_warm_start()
 
     ### business ####
 
-    seed = JSON.parsefile("NC_Seed_Plans/nc_seed_plan1.json") # read seed1
+    seed = JSON.parsefile("NC_Seed_Plans/nc_seed_plan3.json") # read seed1
     GEOIDs = [node["GEOID"] for node in nodes] # tell us what order the geoids are
 
-    seed_1_ntd = [seed[GEOIDs[i]] + 1 for i in 1:length(nodes)] # find geoid from geoids for that node and find the part id from the json and add 1
+    seed_ntd = [seed[GEOIDs[i]] + 1 for i in 1:length(nodes)] # find geoid from geoids for that node and find the part id from the json and add 1
 
-    districts = [[i for i in 1:length(seed_1_ntd) if seed_1_ntd[i]==d] for d in unique(seed_1_ntd)]
+    districts = [[i for i in 1:length(seed_ntd) if seed_ntd[i]==d] for d in unique(seed_ntd)]
     t, m = BeanoInit.partition_to_tree_marked_edges(g, districts)
 
     return t, m

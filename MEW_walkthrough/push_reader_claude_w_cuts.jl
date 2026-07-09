@@ -217,26 +217,51 @@ end
 
 # --- Main ---
 
-run_dirs = ["cs_runs_NC/run_min_cs/"]
-num_runs = 15
+run_dirs = ["cs_runs_NC/run3/"]
+num_runs = 10
 tmp_files = String[]
 for (ci, run_dir) in enumerate(run_dirs)
     tmp = process_one_dir(run_dir, num_runs, ci)
     tmp !== nothing && push!(tmp_files, tmp)
 end
-compile_tmp_files(tmp_files, "percents_NC_min_cs.jld2", "county_splits_NC_min_cs.jld2", "edges_NC_min_cs.jld2")
+compile_tmp_files(tmp_files, "percents_NC4.jld2", "county_splits_NC4.jld2", "edges_NC4.jld2")
 exit()
 
-cs_array = load("county_splits_NC_min_cs.jld2", "county_splits_arr")
+#### PROCESSING DATA
+using StatsPlots, Plots
 
-using Plots
+cs_array = load("county_splits_NC4.jld2", "county_splits_arr")
+percents_array = load("./percents_NC4.jld2", "perc_arr")
+cut_edges_array = load("edges_NC4.jld2", "cut_edges_arr")
+
+key_percs = hcat(percents_array[:,160_000:175_000,1],percents_array[:,320_000:end,1])
+
+box_list = []
+
+b = plot(title="% Dem Box Plots NC")
+
+for i in 1:14
+    boxplot!(b, ["D$i"], percents_array[i,:], label="D$i",legend=false,outliers=false)
+end
+display(b)
+
+
+scatter(key_percs)
+
+plot(cut_edges_array, title="Min CS Cut Edges NC")
+
 plot(cs_array, title="Min County Splits NC")
 
 p = plot(title="Dem % by district NC")
-
-percents_array = load("percents_NC_min_cs.jld2", "perc_arr")
 for i in 1:14
-    plot!(percents_array[i,:,1])
+    plot!(percents_arrays[i,:,1])
+end
+display(p)
+
+
+
+for i in 1:14
+    plot!(parr5[i,:,1])
 end
 display(p)
 
@@ -244,13 +269,68 @@ box_list = []
 
 b = plot(title="% Dem Box Plots NC")
 
-using StatsPlots
+
+
+percents_array = load("./percents_NC_annealing2.jld2", "perc_arr")
 
 for i in 1:14
-    boxplot!(b, ["D$i"], percents_array[i,:,1], label="D$i")
+    boxplot!(b, ["D$i"], percents_array[i,:,1], label="D$i",legend=false,outliers=false)
+end
+display(b)
+
+parr5 = load("./cs_runs_NC_jld2/percents_NC_min_cs_seed5.jld2", "perc_arr")
+parr4 = load("./cs_runs_NC_jld2/percents_NC_min_cs_seed4.jld2", "perc_arr")
+parr3 = load("./cs_runs_NC_jld2/percents_NC_min_cs_seed3.jld2", "perc_arr")
+parr2 = load("./cs_runs_NC_jld2/percents_NC_min_cs_seed2.jld2", "perc_arr")
+parr1 = load("./cs_runs_NC_jld2/percents_NC_min_cs3.jld2", "perc_arr")
+percents_arrays = [parr1, parr2, parr3, parr4, parr5]
+
+for j in 1:14
+    for i in 1:5
+        boxplot!(b, ["$(i)D$j"], percents_arrays[i][j,:,1], label="$(i)D$j",legend=false,outliers=false)
+    end
 end
 
 display(b)
 
-cut_edges_array = load("edges_NC_min_cs.jld2", "cut_edges_arr")
+cut_edges_array = load("edges_NC_annealing2.jld2", "cut_edges_arr")
 plot(cut_edges_array, title="Min CS Cut Edges NC")
+
+p1 = plot(title="% Dem Box Plots NC Seed 1")
+p2 = plot(title="% Dem Box Plots NC Seed 2")
+p3 = plot(title="% Dem Box Plots NC Seed 3")
+p4 = plot(title="% Dem Box Plots NC Seed 4")
+p5 = plot(title="% Dem Box Plots NC Seed 5")
+
+party_plots = [p1,p2,p3,p4,p5]
+seed_dems = [[0.30645412186465704, 0.3146334491733237, 0.40184765312171733, 0.41329216032266197, 0.4221326160476314, 0.43192365113491227, 0.45303881769983095, 0.45587338556973284, 0.4999845210454248, 0.5389868922289281, 0.5472802362406916, 0.6440875447196572, 0.6612906771401983, 0.676746289173188],[0.285417038226027, 0.37993587831792425, 0.3877009585369047, 0.40649145751083915, 0.42223343042216477, 0.4416144281163293, 0.45565741485251393, 0.4695400107234301, 0.5229848767912496, 0.5322070640810135, 0.5570282550919179, 0.5945157886732192, 0.6342189810801163, 0.6808314287568222], [0.33079812975971434, 0.33480380719049563, 0.38477585973392786, 0.390707055799481, 0.42176568285648414, 0.4333629044147124, 0.4438398159497212, 0.45565741485251393, 0.47987383488762964, 0.5213799768755708, 0.5296256516119858, 0.6413780404104659, 0.6991490107756004, 0.7093496474952722], [0.29023485299923735, 0.4021573035837394, 0.41703009185618634, 0.421016962187156, 0.4505359145478278, 0.4546656419659427, 0.4686505242043494, 0.49051442307692306, 0.5043992241623841, 0.5250299363948805, 0.5352914248656484, 0.566658581184461, 0.628757858500795, 0.6344890116761599], [0.29023485299923735, 0.4021573035837394, 0.41703009185618634, 0.421016962187156, 0.4505359145478278, 0.4546656419659427, 0.4686505242043494, 0.49051442307692306, 0.5043992241623841, 0.5250299363948805, 0.5352914248656484, 0.566658581184461, 0.628757858500795, 0.6344890116761599]]
+dist_labs = ["D$i" for i in 1:14]
+
+for i in 1:5
+    for j in 1:14
+         boxplot!(party_plots[i], ["D$j"], percents_arrays[i][j,:,1], label="D$j",legend=false,outliers=false)
+    end
+    scatter!(dist_labs, seed_dems[i], color=:red, markersize=6, marker=:star)
+    savefig(party_plots[i],"./cs_runs_NC_plots/seed$(i)_party.png")
+end
+
+differences = [[] for i in 1:5]
+
+for i in 1:5
+    for j in 1:14
+         diff = seed_dems[i][j] - median(percents_arrays[i][j,:,1])
+         push!(differences[i],round(diff,digits=5))
+    end
+    println(round(mean(differences[i]), digits=7))
+end
+
+differences
+
+squared = [[] for i in 1:5] 
+
+for i in 1:5
+    for j in 1:14
+        push!(squared[i],differences[i][j]^2)
+    end
+    println(round(mean(squared[i]), digits=7))
+end
