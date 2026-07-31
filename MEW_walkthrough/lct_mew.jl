@@ -670,3 +670,242 @@ function from_simplegraph(
     tree_edge_set = Set(simple_edge(src(e), dst(e)) for e in edges(tree))
     return build_lct_state(g, tree_edge_set, marked_edges, k)
 end
+
+"""
+Per-district score: continuous tent function peaked at threshold.
+  share ≤ threshold :  y = share / threshold          (rises linearly to 1.0)
+  share >  threshold :  y = 1 - slope_down*(share-threshold)  (falls slowly)
+Every point of share below threshold is rewarded equally.
+Every point above threshold is penalized at rate slope_down.
+Keep slope_down small relative to 1/threshold so the packing penalty is
+much weaker than the approaching-majority reward.
+Default threshold=0.501, slope_down=0.5:
+  gain 45% → 47%  = +0.040
+  loss 70% → 75%  = -0.025  (~1.6× smaller)
+"""
+function _district_score(share::Float64;
+                         threshold::Float64=0.501,
+                         slope_down::Float64=0.5)
+    share <= threshold ? share / threshold : 1.0 - slope_down * (share - threshold)
+end
+
+
+"""
+Only scores the `n` least-Republican districts, each on a standard
+_district_score tent peaking at `threshold` (default 55% R). The other
+k-n districts are ignored entirely.
+Useful when you only care about packing/protecting a fixed number of
+safe-R seats and don't want to penalize or reward the rest.
+"""
+function rep_voteshare_score_topn(df::DataFrame, node_to_dist::Vector{Int64}, k::Int64, n::Int64;
+                                  d_col::String="PRE20D", r_col::String="PRE20R",
+                                  threshold::Float64=0.55, slope_down::Float64=0.5)
+    d = tally(df, d_col, node_to_dist, k)
+    r = tally(df, r_col, node_to_dist, k)
+    shares = Float64[]
+    for i in 1:k
+        tot = d[i] + r[i]
+        tot == 0 && continue
+        push!(shares, r[i] / tot)
+    end
+    sort!(shares; rev=false)
+    score = 0.0
+    for i in 1:min(n, length(shares))
+        score += _district_score(shares[i]; threshold, slope_down)
+    end
+    return score
+end
+
+"""
+county_splits / cuts terms are Gaussian-style: log-density is
+-beta*(deviation from a fixed target)^2, so they penalize moving away from
+cty_target/target_cuts in either direction.
+The optional voteshare term (beta_voteshare != 0) is different in kind: it's
+exponential-tilted rather than Gaussian. rep_voteshare_score_topn already
+peaks at voteshare_threshold via its own tent shape (see _district_score), so
+the stationary density is just reweighted by exp(beta_voteshare * score) —
+log-density contribution beta_voteshare*(score_new - score_old), monotonic in
+score rather than penalizing distance from a target. (A Gaussian penalty
+directly on each top-n district's raw share against its own target voteshare
+is the natural next step if this doesn't converge well enough on its own.)
+"""
+function make_combined_party_energy(
+    county_ids          :: Vector{Any},
+    beta_county_splits :: Number,
+    beta_cuts           :: Number,
+    cty_target          :: Number,
+    target_cuts         :: Number;
+    df                   = nothing,
+    k                    :: Int64   = 0,
+    beta_voteshare      :: Number  = 0.0,
+    n_top                :: Int64   = 3,
+    voteshare_threshold :: Float64 = 0.45,
+    voteshare_slope_down :: Float64 = 0.5,
+    d_col                :: String  = "G24PREDHAR",
+    r_col                :: String  = "G24PRERTRU",
+)
+    if beta_voteshare != 0.0
+        @assert !isnothing(df) && k > 0 "make_combined_energy: df and k are required when beta_voteshare != 0"
+    end
+    return function combined_energy(g, new_ntd, old_ntd)
+        cty_splits_new = county_splits(g, new_ntd, county_ids)
+        cty_splits_old = county_splits(g, old_ntd, county_ids)
+        cuts_new = count(e -> new_ntd[src(e)] != new_ntd[dst(e)], edges(g))
+        cuts_old = count(e -> old_ntd[src(e)] != old_ntd[dst(e)], edges(g))
+        energy = -beta_county_splits * ((cty_splits_new - cty_target)^2 - (cty_splits_old - cty_target)^2) -
+                 beta_cuts          * ((cuts_new - target_cuts)^2 - (cuts_old - target_cuts)^2)
+        if beta_voteshare != 0.0
+            score_new = rep_voteshare_score_topn(df, new_ntd, k, n_top;
+                                                  d_col=d_col, r_col=r_col,
+                                                  threshold=voteshare_threshold, slope_down=voteshare_slope_down)
+            score_old = rep_voteshare_score_topn(df, old_ntd, k, n_top;
+                                                  d_col=d_col, r_col=r_col,
+                                                  threshold=voteshare_threshold, slope_down=voteshare_slope_down)
+            energy += beta_voteshare * (score_new - score_old)
+        end
+        return energy
+    end
+end
+
+
+# call in vector of target percents for districts ?
+# return difference between values of targets and current 
+
+# want to pass something that says we want to ignore it
+# use cases: we don't care, we want it to be close to this value (smaller diff better), beyond this value in some direction but we don't care how much
+# input two vectors, one is targets, one is how we want to treat the value (0, =, below, above)
+# four symbols (greater, less, equals, do_nothing), check for symbols, 
+
+function rep_voteshare_score_vector(df::DataFrame, node_to_dist::Vector{Int64}, k::Int64, targets::Vector{Float64}, uses::Vector{Symbol}, slope_down::Number=0.5;
+                                  d_col::String="G20PREDBID", r_col::String="G20PRERTRU")
+    d = tally(df, d_col, node_to_dist, k)
+    r = tally(df, r_col, node_to_dist, k)
+    shares = Float64[]
+
+    for i in 1:k
+        tot = d[i] + r[i]
+        tot == 0 && continue
+        push!(shares, r[i] / tot)
+    end
+
+    sort!(shares; rev=false)
+
+    score = 0.0
+
+    for i in 1:length(shares)
+        if uses[i] == :do_nothing
+            continue
+        elseif uses[i] == :equal
+            score += shares[i] <= targets[i] ? shares[i] / targets[i] : 1.0 - slope_down * (shares[i] - targets[i])
+        elseif uses[i] == :less
+            score += (1-shares[i]) <= (1-targets[i]) ? (1-shares[i]) / (1-targets[i]) : 1.0 
+        elseif uses[i] ==:greater
+            score += shares[i] <= targets[i] ? shares[i] / targets[i] : 1.0 
+        end
+    end
+    return score
+end
+
+function make_combined_super_party_energy(
+    county_ids          :: Vector{Any},
+    beta_county_splits :: Number,
+    beta_cuts           :: Number,
+    cty_target          :: Number,
+    target_cuts         :: Number;
+    df                   = nothing,
+    k                    :: Int64   = 0,
+    targets             :: Vector{Float64},
+    uses                :: Vector{Symbol},
+    beta_voteshare      :: Number  = 0.0,
+    voteshare_slope_down :: Number = 0.5,
+    d_col                :: String  = "G20PREDBID",
+    r_col                :: String  = "G20PRERTRU",
+)
+    if beta_voteshare != 0.0
+        @assert !isnothing(df) && k > 0 "make_combined_energy: df and k are required when beta_voteshare != 0"
+    end
+    return function combined_energy(g, new_ntd, old_ntd)
+        cty_splits_new = county_splits(g, new_ntd, county_ids)
+        cty_splits_old = county_splits(g, old_ntd, county_ids)
+        cuts_new = count(e -> new_ntd[src(e)] != new_ntd[dst(e)], edges(g))
+        cuts_old = count(e -> old_ntd[src(e)] != old_ntd[dst(e)], edges(g))
+        energy = -beta_county_splits * ((cty_splits_new - cty_target)^2 - (cty_splits_old - cty_target)^2) -
+                 beta_cuts          * ((cuts_new - target_cuts)^2 - (cuts_old - target_cuts)^2)
+        if beta_voteshare != 0.0
+            score_new = rep_voteshare_score_vector(df, new_ntd, k, targets, uses, voteshare_slope_down;
+                                                  d_col=d_col, r_col=r_col)
+            score_old = rep_voteshare_score_vector(df, old_ntd, k, targets, uses, voteshare_slope_down;
+                                                  d_col=d_col, r_col=r_col)
+            energy += beta_voteshare * (score_new - score_old)
+        end
+        return energy
+    end
+end
+
+function rep_voteshare_score_vector_gaussian(df::DataFrame, node_to_dist::Vector{Int64}, k::Int64, targets::Vector{Float64}, uses::Vector{Symbol}, slope_down::Number=0.5;
+                                  d_col::String="PRE20D", r_col::String="PRE20R")
+    d = tally(df, d_col, node_to_dist, k)
+    r = tally(df, r_col, node_to_dist, k)
+    shares = Float64[]
+
+    for i in 1:k
+        tot = d[i] + r[i]
+        tot == 0 && continue
+        push!(shares, r[i] / tot)
+    end
+
+    sort!(shares; rev=false)
+
+    score = 0.0
+
+    for i in 1:length(shares)
+        if uses[i] == :do_nothing
+            continue
+        elseif uses[i] == :equal
+            score += shares[i] <= targets[i] ? shares[i] / targets[i] : 1.0 - slope_down * (shares[i] - targets[i])^2
+        elseif uses[i] == :less
+            continue
+            # score += (1-shares[i]) <= (1-targets[i]) ? (1-shares[i]) / (1-targets[i]) : 1.0 
+        elseif uses[i] ==:greater
+            continue
+            # score += shares[i] <= targets[i] ? shares[i] / targets[i] : 1.0 
+        end
+    end
+    return score
+end
+
+function make_combined_gaussian_party_energy(
+    county_ids          :: Vector{Any},
+    beta_county_splits :: Number,
+    beta_cuts           :: Number,
+    cty_target          :: Number,
+    target_cuts         :: Number;
+    df                   = nothing,
+    k                    :: Int64   = 0,
+    targets             :: Vector{Float64},
+    uses                :: Vector{Symbol},
+    beta_voteshare      :: Number  = 0.0,
+    voteshare_slope_down :: Number = 0.5,
+    d_col                :: String  = "G20PREDBID",
+    r_col                :: String  = "G20PRERTRU",
+)
+    if beta_voteshare != 0.0
+        @assert !isnothing(df) && k > 0 "make_combined_energy: df and k are required when beta_voteshare != 0"
+    end
+    return function combined_energy(g, new_ntd, old_ntd)
+        cty_splits_new = county_splits(g, new_ntd, county_ids)
+        cty_splits_old = county_splits(g, old_ntd, county_ids)
+        cuts_new = count(e -> new_ntd[src(e)] != new_ntd[dst(e)], edges(g))
+        cuts_old = count(e -> old_ntd[src(e)] != old_ntd[dst(e)], edges(g))
+        energy = -beta_county_splits * ((cty_splits_new - cty_target)^2 - (cty_splits_old - cty_target)^2) -
+                 beta_cuts          * ((cuts_new - target_cuts)^2 - (cuts_old - target_cuts)^2)
+        if beta_voteshare != 0.0
+            score_new = rep_voteshare_score_vector_gaussian(df, new_ntd, k, targets, uses, voteshare_slope_down;
+                                                  d_col=d_col, r_col=r_col)
+            score_old = rep_voteshare_score_vector_gaussian(df, old_ntd, k, targets, uses, voteshare_slope_down;
+                                                  d_col=d_col, r_col=r_col)
+            energy -= beta_voteshare * (score_new - score_old)
+        end
+        return energy
+    end
+end

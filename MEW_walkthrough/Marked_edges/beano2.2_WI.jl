@@ -928,8 +928,8 @@ end
 
 
 function sorted_percents(df, ptition)
-    tot = tally(df, "PRE16D", ptition) + tally(df, "PRE16R", ptition)
-    dem = tally(df, "PRE16D", ptition)
+    tot = tally(df, "G20PREDBID", ptition) + tally(df, "G20PRERTRU", ptition)
+    dem = tally(df, "G20PREDBID", ptition)
 
     percs = dem ./ tot
 

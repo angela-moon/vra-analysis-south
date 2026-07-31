@@ -44,13 +44,13 @@ end
 
 # ── main ──────────────────────────────────────────────────────────────────────
 
-const K          = 14
+const K          = 7
 const EPSILON    = 0.02
 #const N_ITERS    = 10_000
 
 function main(; initialization=nothing,N_ITERS)
 
-    data  = JSON.parsefile("NC/NC_dual_graph_stripped.json")
+    data  = JSON.parsefile("SC/SC_dual_graph_stripped.json")
     nodes = data["nodes"]
     links = data["links"]
 
@@ -115,7 +115,7 @@ function main(; initialization=nothing,N_ITERS)
     # energy_fn = make_combined_energy(1.2,county_ids,0.01, 8,650)
     # energy_fn = make_min_county_splits_energy(7, 1, county_ids)
     # energy_fn = make_combined_party_energy(county_ids, 1.2, 0.01, 8, 650; df=df, k=K,beta_voteshare=100) 
-    energy_fn = make_combined_super_party_energy(county_ids, 1.2, 0.01, 8, 650; df=df, k=K, targets=[.3, .3, .35, .55, .55, .55, 0, 0, 0, 0, 0, 0, 0, 0], uses=[:less, :less, :less, :greater, :greater, :greater, :do_nothing, :do_nothing, :do_nothing, :do_nothing, :do_nothing, :do_nothing, :do_nothing, :do_nothing], beta_voteshare=550, voteshare_slope_down=0.5, d_col="G24PREDHAR", r_col="G24PRERTRU")
+    energy_fn = make_combined_super_party_energy(county_ids, 1.1, 0.01, 7, 300; df=df, k=K, targets=[.55, .55, .55, 0, 0, 0, 0], uses=[:greater, :greater, :greater, :do_nothing, :do_nothing, :do_nothing, :do_nothing], beta_voteshare=750, voteshare_slope_down=0.5, d_col="G24PREDHAR", r_col="G24PRERTRU")
 
     initial_partition = ntd_to_partition_dict(state.node_to_dist)
     current_ntd       = copy(state.node_to_dist)
@@ -139,7 +139,7 @@ end
 
 function prepare_warm_start()
 
-    data  = JSON.parsefile("NC/NC_dual_graph_stripped.json")
+    data  = JSON.parsefile("SC/SC_dual_graph_stripped.json")
     nodes = data["nodes"]
     links = data["links"]
 
@@ -184,14 +184,25 @@ function prepare_warm_start()
 
     ### business ####
 
-    seed = JSON.parsefile("NC_Seed_Plans/nc_seed_plan3.json") # read seed1
+    #seed_ntd = df[!,:CON]
+
+    seed = JSON.parsefile("SC_Seed_Plans/sc_seed_plan3.json") # read seed1
     GEOIDs = [node["GEOID"] for node in nodes] # tell us what order the geoids are
 
     seed_ntd = [seed[GEOIDs[i]] + 1 for i in 1:length(nodes)] # find geoid from geoids for that node and find the part id from the json and add 1
 
     districts = [[i for i in 1:length(seed_ntd) if seed_ntd[i]==d] for d in unique(seed_ntd)]
-    t, m = BeanoInit.partition_to_tree_marked_edges(g, districts)
 
+    #con_ids        = Vector{Int64}(df[!, "CON"])
+    #println(unique(con_ids))
+    #warm_districts = [findall(==(c), con_ids) for c in sort(unique(con_ids))]
+    #@assert length(warm_districts) == K "enacted CON plan has $(length(warm_districts)) districts, expected K=$K"
+    #t, m = BeanoInit.partition_to_tree_marked_edges(g, warm_districts)
+    t, m = BeanoInit.partition_to_tree_marked_edges(g, districts)
+    
     return t, m
 
 end
+
+
+

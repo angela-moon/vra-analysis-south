@@ -60,6 +60,33 @@ end
     return sort!(percs)
 end
 
+@everywhere function percents_sc(df, ptition)
+    tot = tally(df, "G24PREDHAR", ptition) + tally(df, "G24PRERTRU", ptition)
+    dem = tally(df, "G24PREDHAR", ptition)
+
+    percs = dem ./ tot
+
+    return percs
+end
+
+@everywhere function sorted_bpercents_sc(df, ptition)
+    tot = tally(df, "Total", ptition) 
+    bpop = tally(df, "NH_Black", ptition)
+
+    percs = bpop ./ tot
+
+    return sort!(percs)
+end
+
+@everywhere function bpercents_sc(df, ptition)
+    tot = tally(df, "Total", ptition) 
+    bpop = tally(df, "NH_Black", ptition)
+
+    percs = bpop ./ tot
+
+    return percs
+end
+
 @everywhere function county_splits(ntd, county_ids)
     splits = 0
     for cty in Set(county_ids)
@@ -77,12 +104,13 @@ end
     df         = df_ref[]
     county_ids = county_ids_ref[]
     n          = nrow(df)
-    rows       = Vector{Vector{Float16}}()
-    splits     = Vector{Int16}()
-    cuts       = Vector{Int32}()
+    #rows       = Vector{Vector{Float16}}()
+    #splits     = Vector{Int16}()
+    #cuts       = Vector{Int32}()
+    brows      = Vector{Vector{Float16}}()
 
     try
-        c = open("$(run_dir)/run$(i).jls", "r") do io
+        c = open("$run_dir/run$i.jls", "r") do io
             deserialize(io)
         end
         initial_partition = c[1]
@@ -92,24 +120,27 @@ end
         current_partition = copy(initial_partition)
         ntd_vec = [current_partition[node] for node in 1:n]
 
-        push!(rows, Vector{Float16}(sorted_percents_sc(df, current_partition)))
-        push!(splits, county_splits(ntd_vec, county_ids))
-        push!(cuts, Int32(length(cut_edges(current_partition, g))))
+        #push!(rows, Vector{Float16}(sorted_percents_sc(df, current_partition)))
+        #push!(splits, county_splits(ntd_vec, county_ids))
+        #push!(cuts, Int32(length(cut_edges(current_partition, g))))
+        push!(brows, Vector{Float16}(sorted_bpercents_sc(df, current_partition)))
 
         for flip in flips
             if haskey(flip, 0)
-                push!(rows, Vector{Float16}(sorted_percents_sc(df, current_partition)))
-                push!(splits, county_splits(ntd_vec, county_ids))
-                push!(cuts, Int32(length(cut_edges(current_partition, g))))
+                #push!(rows, Vector{Float16}(sorted_percents_sc(df, current_partition)))
+                #push!(splits, county_splits(ntd_vec, county_ids))
+                #push!(cuts, Int32(length(cut_edges(current_partition, g))))
+                push!(brows, Vector{Float16}(sorted_bpercents_sc(df, current_partition)))
                 continue
             end
             for (node, new_part) in flip
                 current_partition[node] = new_part
                 ntd_vec[node]           = new_part
             end
-            push!(rows, Vector{Float16}(sorted_percents_sc(df, current_partition)))
-            push!(splits, county_splits(ntd_vec, county_ids))
-            push!(cuts, Int32(length(cut_edges(current_partition, g))))
+            #push!(rows, Vector{Float16}(sorted_percents_sc(df, current_partition)))
+            #push!(splits, county_splits(ntd_vec, county_ids))
+            #push!(cuts, Int32(length(cut_edges(current_partition, g))))
+            push!(brows, Vector{Float16}(sorted_bpercents_sc(df, current_partition)))
         end
 
         flips = nothing
@@ -123,7 +154,9 @@ end
 
     # return as (niters × ndistricts) matrix — no jagged arrays — plus the
     # per-iteration county-split and cut-edge counts
-    return reduce(hcat, rows)', splits, cuts
+    println("reduce(hcat, brows)'")
+    println(size(reduce(hcat, brows)'))
+    return reduce(hcat, brows)' # reduce(hcat, rows)', splits, cuts, 
 end
 
 # Process one run_dir, write result to a temp file, return filename
@@ -134,7 +167,8 @@ function process_one_dir(run_dir, num_runs, chain_idx, tmp_prefix="tmp_perc")
     results = pmap(tasks; on_error=ex->nothing) do i
         process_single_run(run_dir, i)
     end
-
+    println("results")
+    println(size(results))
     valid = [r for r in results if r !== nothing]
     if isempty(valid)
         println("  WARNING: all runs failed for $run_dir")
@@ -142,71 +176,87 @@ function process_one_dir(run_dir, num_runs, chain_idx, tmp_prefix="tmp_perc")
     end
     println("  $(length(valid)) / $num_runs runs succeeded")
 
-    perc_mats  = [r[1] for r in valid]
-    split_vecs = [r[2] for r in valid]
-    cut_vecs   = [r[3] for r in valid]
+    #perc_mats  = [r[1] for r in valid]
+    #split_vecs = [r[2] for r in valid]
+    #cut_vecs   = [r[3] for r in valid]
+    bperc_mats = valid
+    println("bperc_mats")
+    println(size(bperc_mats))
 
     # stack all runs along iterations axis: each mat is (niters × ndistricts)
     # cat along dim 1 gives (niters*num_runs × ndistricts)
-    combined = reduce(vcat, perc_mats)       # (total_iters × ndistricts)
-    arr = Array{Float16, 2}(undef, size(combined, 2), size(combined, 1))
-    arr .= combined'                         # (ndistricts × total_iters)
+    #combined = reduce(vcat, perc_mats)       # (total_iters × ndistricts)
+    bcombined = reduce(vcat, bperc_mats)
+    println("bcombined")
+    println(size(bcombined))
+    #arr = Array{Float16, 2}(undef, size(combined, 2), size(combined, 1))
+    #arr .= combined'                         # (ndistricts × total_iters)
+    barr = Array{Float16, 2}(undef, size(bcombined, 2), size(bcombined, 1))
+    barr .= bcombined'                         # (ndistricts × total_iters)
 
-    splits_arr = reduce(vcat, split_vecs)    # (total_iters,)
-    cuts_arr   = reduce(vcat, cut_vecs)      # (total_iters,)
+    #splits_arr = reduce(vcat, split_vecs)    # (total_iters,)
+    #cuts_arr   = reduce(vcat, cut_vecs)      # (total_iters,)
 
     tmp_file = "$(tmp_prefix)_chain$(chain_idx).jld2"
-    jldsave(tmp_file; arr, splits_arr, cuts_arr)
-    println("  Written $tmp_file  ($(round(sizeof(arr)/1024^3, digits=3)) GB)")
+    jldsave(tmp_file; barr) # arr, splits_arr, cuts_arr,
+    println("  Written $tmp_file  ($(round(sizeof(barr)/1024^3, digits=3)) GB)")
 
     results    = nothing
     valid      = nothing
-    perc_mats  = nothing
-    split_vecs = nothing
-    cut_vecs   = nothing
-    combined   = nothing
-    arr        = nothing
-    splits_arr = nothing
-    cuts_arr   = nothing
+    #perc_mats  = nothing
+    #split_vecs = nothing
+    #cut_vecs   = nothing
+    #combined   = nothing
+    #arr        = nothing
+    #splits_arr = nothing
+    #cuts_arr   = nothing
+    bperc_mats = nothing
+    bcombined = nothing 
+    barr = nothing
     GC.gc(true)
 
     return tmp_file
 end
 
 # Concatenate temp files into final output
-function compile_tmp_files(tmp_files, out_file, splits_out_file, cuts_out_file)
-    println("Compiling $(length(tmp_files)) temp files into $out_file ...")
+function compile_tmp_files(tmp_files, bperc_out_file) #out_file, splits_out_file, cuts_out_file
+    println("Compiling $(length(tmp_files)) temp files into $bperc_out_file ...")
 
     # Read first to get dims
     ndistricts, niters = jldopen(tmp_files[1], "r") do jf
-        size(jf["arr"])
+        size(jf["barr"])
     end
     nchains = length(tmp_files)
 
     println("Final array: ndistricts=$ndistricts, niters=$niters, nchains=$nchains")
     println("Estimated size: $(round(ndistricts * niters * nchains * 2 / 1024^3, digits=2)) GB (Float16)")
 
-    final_arr        = Array{Float16, 3}(undef, ndistricts, niters, nchains)
-    final_splits_arr = Array{Int16, 2}(undef, niters, nchains)
-    final_cuts_arr   = Array{Int32, 2}(undef, niters, nchains)
+    #final_arr        = Array{Float16, 3}(undef, ndistricts, niters, nchains)
+    final_barr        = Array{Float16, 3}(undef, ndistricts, niters, nchains)
+    #final_splits_arr = Array{Int16, 2}(undef, niters, nchains)
+    #final_cuts_arr   = Array{Int32, 2}(undef, niters, nchains)
 
     for (ci, tmp_file) in enumerate(tmp_files)
         jldopen(tmp_file, "r") do jf
-            final_arr[:, :, ci]     .= jf["arr"]
-            final_splits_arr[:, ci] .= jf["splits_arr"]
-            final_cuts_arr[:, ci]   .= jf["cuts_arr"]
+            #final_arr[:, :, ci]     .= jf["arr"]
+            final_barr[:, :, ci]     .= jf["barr"]
+            #final_splits_arr[:, ci] .= jf["splits_arr"]
+            #final_cuts_arr[:, ci]   .= jf["cuts_arr"]
         end
         println("  Loaded chain $ci / $nchains")
     end
 
-    jldsave(out_file; perc_arr=final_arr, compress=true)
-    println("Saved $out_file")
+    #jldsave(out_file; perc_arr=final_arr, compress=true)
+    #println("Saved $out_file")
 
-    jldsave(splits_out_file; county_splits_arr=final_splits_arr, compress=true)
-    println("Saved $splits_out_file")
+    #jldsave(splits_out_file; county_splits_arr=final_splits_arr, compress=true)
+    #println("Saved $splits_out_file")
 
-    jldsave(cuts_out_file; cut_edges_arr=final_cuts_arr, compress=true)
-    println("Saved $cuts_out_file")
+    #jldsave(cuts_out_file; cut_edges_arr=final_cuts_arr, compress=true)
+    #println("Saved $cuts_out_file")
+
+    jldsave(bperc_out_file; barr=final_barr, compress=true)
+    println("Saved $bperc_out_file")
 
     # Clean up temp files
     for tmp_file in tmp_files
@@ -217,28 +267,36 @@ end
 
 # --- Main ---
 
-run_dirs = ["cs_runs_NC/run3/"]
-num_runs = 10
+run_dirs = ["party_runs_NC/run_party2/"]
+num_runs = 374
 tmp_files = String[]
 for (ci, run_dir) in enumerate(run_dirs)
     tmp = process_one_dir(run_dir, num_runs, ci)
     tmp !== nothing && push!(tmp_files, tmp)
 end
-compile_tmp_files(tmp_files, "percents_NC4.jld2", "county_splits_NC4.jld2", "edges_NC4.jld2")
+compile_tmp_files(tmp_files, "bpercents_NC_party2.jld2")
 exit()
 
 #### PROCESSING DATA
 using StatsPlots, Plots
 
-cs_array = load("county_splits_NC4.jld2", "county_splits_arr")
-percents_array = load("./percents_NC4.jld2", "perc_arr")
-cut_edges_array = load("edges_NC4.jld2", "cut_edges_arr")
+cs_array = load("county_splits_NC_party1.jld2", "county_splits_arr")
+percents_array = load("./percents_NC_party2.jld2", "perc_arr")
+cut_edges_array = load("edges_NC_party2.jld2", "cut_edges_arr")
+bpercs_array = load("bpercents_NC_party2.jld2", "barr")
 
 key_percs = hcat(percents_array[:,160_000:175_000,1],percents_array[:,320_000:end,1])
 
-box_list = []
 
-b = plot(title="% Dem Box Plots NC")
+b = plot(title="% Black Box Plots NC, beta_voteshare=550")
+
+for i in 1:14
+    boxplot!(b, ["D$i"], bpercs_array[i,:], label="D$i",legend=false,outliers=false)
+end
+display(b)
+
+
+b = plot(title="% Dem Box Plots NC, beta_voteshare=550")
 
 for i in 1:14
     boxplot!(b, ["D$i"], percents_array[i,:], label="D$i",legend=false,outliers=false)
@@ -248,13 +306,13 @@ display(b)
 
 scatter(key_percs)
 
-plot(cut_edges_array, title="Min CS Cut Edges NC")
+plot(cut_edges_array, title="Cut Edges NC, beta_voteshare=550")
 
-plot(cs_array, title="Min County Splits NC")
+plot(cs_array, title="County Splits NC, beta_voteshare=550")
 
-p = plot(title="Dem % by district NC")
+p = plot(title="Dem % Trace NC, beta_voteshare=550")
 for i in 1:14
-    plot!(percents_arrays[i,:,1])
+    plot!(percents_array[i,:,1])
 end
 display(p)
 

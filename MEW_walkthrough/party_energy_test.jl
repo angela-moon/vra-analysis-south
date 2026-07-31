@@ -1,11 +1,3 @@
-# lct_run_NH.jl — LCT-based NH runner
-#
-# Drop-in replacement for Marked_edges/bludef_uniform_to_doob.jl.
-# Uses LCTState internally for fast MCMC steps but returns the SAME
-# serialization format: (initial_partition, flips, tree, marked_edges)
-# so existing .jls files and deserialization code are fully compatible.
-#
-
 include("lct_mew.jl")
 
 # Wrap the original init utilities to avoid name collisions with lct_mew.jl
@@ -15,8 +7,6 @@ module BeanoInit
 end
 
 using JSON, DataFrames, Serialization, Graphs, ProgressBars
-
-# ── helpers ───────────────────────────────────────────────────────────────────
 
 function lct_state_to_simplegraph(s::LCTState)
     t = SimpleGraph(s.n)
@@ -40,17 +30,13 @@ function compute_flip_ntd(old_ntd::Vector{Int64}, new_ntd::Vector{Int64})
     return flips
 end
 
-
-
-# ── main ──────────────────────────────────────────────────────────────────────
-
 const K          = 14
 const EPSILON    = 0.02
-#const N_ITERS    = 10_000
+const N_ITERS    = 100_000
 
-function main(; initialization=nothing,N_ITERS)
+function main(; initialization=nothing,N_ITERS=N_ITERS)
 
-    data  = JSON.parsefile("NC/NC_dual_graph_stripped.json")
+    data  = JSON.parsefile("GA/GA_dual_graph_stripped.json")
     nodes = data["nodes"]
     links = data["links"]
 
@@ -112,11 +98,11 @@ function main(; initialization=nothing,N_ITERS)
     # energy_fn = make_polsby_popper_energy(1000.0, areas, boundary_lengths, perim_dict, K)
     # energy_fn = make_cuts_energy(0.1, 600)
     # energy_fn = make_county_splits_energy(0.4, df[!,"COUNTYFP"])
-    # energy_fn = make_combined_energy(1.2,county_ids,0.01, 8,650)
+    # energy_fn = make_combined_energy(1.2,county_ids,0.01, 15,700)
     # energy_fn = make_min_county_splits_energy(7, 1, county_ids)
     # energy_fn = make_combined_party_energy(county_ids, 1.2, 0.01, 8, 650; df=df, k=K,beta_voteshare=100) 
-    energy_fn = make_combined_super_party_energy(county_ids, 1.2, 0.01, 8, 650; df=df, k=K, targets=[.3, .3, .35, .55, .55, .55, 0, 0, 0, 0, 0, 0, 0, 0], uses=[:less, :less, :less, :greater, :greater, :greater, :do_nothing, :do_nothing, :do_nothing, :do_nothing, :do_nothing, :do_nothing, :do_nothing, :do_nothing], beta_voteshare=550, voteshare_slope_down=0.5, d_col="G24PREDHAR", r_col="G24PRERTRU")
 
+    energy_fn = make_combined_super_party_energy(county_ids, 1.2, 0.01, 15, 700; df=df, k=K, targets=[0.30,0.30,0.30,0.30, 0, 0.55, 0.55, 0.55, 0.55, 0, 0, 0, 0, 0], uses=[:less, :less, :less, :equal, :do_nothing, :equal, :greater, :greater, :greater, :do_nothing, :do_nothing, :do_nothing, :do_nothing, :do_nothing], beta_voteshare=750, voteshare_slope_down=0.5)
     initial_partition = ntd_to_partition_dict(state.node_to_dist)
     current_ntd       = copy(state.node_to_dist)
     flips             = Vector{Dict{Int, Int}}()
@@ -136,10 +122,9 @@ function main(; initialization=nothing,N_ITERS)
     return initial_partition, flips, final_tree, copy(state.marked_edges)
 end
 
-
 function prepare_warm_start()
 
-    data  = JSON.parsefile("NC/NC_dual_graph_stripped.json")
+    data  = JSON.parsefile("GA/GA_dual_graph_stripped.json")
     nodes = data["nodes"]
     links = data["links"]
 
@@ -184,14 +169,24 @@ function prepare_warm_start()
 
     ### business ####
 
-    seed = JSON.parsefile("NC_Seed_Plans/nc_seed_plan3.json") # read seed1
+    seed = JSON.parsefile("GA_Seed_Plans/ga_seed_plan1.json") # read seed1
     GEOIDs = [node["GEOID"] for node in nodes] # tell us what order the geoids are
 
     seed_ntd = [seed[GEOIDs[i]] + 1 for i in 1:length(nodes)] # find geoid from geoids for that node and find the part id from the json and add 1
 
     districts = [[i for i in 1:length(seed_ntd) if seed_ntd[i]==d] for d in unique(seed_ntd)]
     t, m = BeanoInit.partition_to_tree_marked_edges(g, districts)
+    println(BeanoInit.sorted_percents(df, ntd_to_partition_dict(seed_ntd)))
+    println("Score Function: ")
+    println(rep_voteshare_score_vector(df, seed_ntd, 14, [0.30,0.30,0.30,0.30, 0, 0.55, 0.55, 0.55, 0.55, 0, 0, 0, 0, 0], [:less, :less, :less, :equal, :do_nothing, :equal, :greater, :greater, :greater, :do_nothing, :do_nothing, :do_nothing, :do_nothing, :do_nothing], 0.5)
+)
 
     return t, m
 
 end
+
+prepare_warm_start()
+
+
+a,b,c,d=main(; initialization=prepare_warm_start(), N_ITERS=N_ITERS)
+serialize("cs_runs_GA/run_party2/run1.jls", (a,b,c,d))

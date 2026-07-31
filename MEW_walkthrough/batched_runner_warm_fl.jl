@@ -2,10 +2,10 @@
 #addprocs(10)
 
 #@everywhere begin
-include("lct_run_NC.jl")
+include("lct_run_FL.jl")
 
 function long_run(n, j)
-    run_dir = "cs_runs_NC/run$(j)"
+    run_dir = "party_runs_FL/run$(j)"
 
     # if chain is there, how many chains are there and how many steps has it taken
     if isdir(run_dir)
@@ -57,7 +57,7 @@ end
     return nothing
 end =#
 
-num_iterations = 400
+num_iterations = 800
 
 # j_values          = 1:10
 # param_combinations = vec([(j=j,) for j in j_values])
@@ -65,4 +65,4 @@ num_iterations = 400
 
 #results = pmap(run_wrapper, param_combinations)
 
-long_run(num_iterations, "3")
+long_run(num_iterations, "1")   

@@ -46,22 +46,15 @@ GA/Redist Analysis/output
 GA/Redist Analysis/ga_alarm_plans.csv
 GA/Redist Analysis/.RDataTmp
 
-MEW_walkthrough/__MACOSX/
 MEW_walkthrough/.vscode/
-MEW_walkthrough/cs_runs_NC
-MEW_walkthrough/cs_runs_NC_jld2
-MEW_walkthrough/cs_runs_NC_plots
-MEW_walkthrough/NC
-MEW_walkthrough/NC_MEW_gif
-MEW_walkthrough/NC_Seed_Plans
-MEW_walkthrough/SC
-MEW_walkthrough/.gitignore
+MEW_walkthrough/data/
+MEW_walkthrough/jld2s
+MEW_walkthrough/plots
+MEW_walkthrough/runs
+MEW_walkthrough/seed_plans
 MEW_walkthrough/NC_MEW.json
-MEW_walkthrough/link_cut_MEW/.gitignore
-MEW_walkthrough/link_cut_MEW/README.md
 MEW_walkthrough/Manifest.toml
 MEW_walkthrough/Project.toml
-
 
 NC/__pycache__/
 NC/MEW/
@@ -87,6 +80,7 @@ NC/NC_Processed/nc_vest_20/
 NC/NC_Processed/output/
 NC/NC_Seed_Plans/
 NC/NC_Stats/
+NC/NC_trans_gif/
 NC/NC_assignment_{seed}_{temp}.json
 NC/NC_assignment_current.json
 NC/Redist Analysis/NC_ALARM_Ensemble_graph
@@ -117,6 +111,7 @@ SC/SC_Stats/
 SC/SC_assignment_current.json
 
 NY_Processed_Precincts_Data/
+Processed Precincts
 
 Angela_Matching_Exploration.ipynb
 First_Ensemble.ipynb
